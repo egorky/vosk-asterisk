@@ -33,6 +33,30 @@ AC_SUBST(ASTERISK_CONF_DIR)
 AC_CONFIG_FILES([
     Makefile
     res-speech-vosk/Makefile
+    res-speech-google/Makefile
 ])
+
+PKG_CHECK_MODULES([GRPC], [grpc++ >= 1.0.0 protobuf >= 3.0.0], [
+    AC_DEFINE([HAVE_GRPC], [1], [Define to 1 if gRPC is available])
+    GRPC_CFLAGS="$GRPC_CFLAGS"
+    GRPC_LIBS="$GRPC_LIBS"
+], [
+    AC_MSG_ERROR([gRPC and Protocol Buffers libraries not found. Please install them.])
+])
+
+PKG_CHECK_MODULES([GOOGLE_CLOUD_SPEECH], [google-cloud-cpp-speech], [
+    AC_DEFINE([HAVE_GOOGLE_CLOUD_SPEECH], [1], [Define to 1 if Google Cloud Speech is available])
+    GOOGLE_CLOUD_SPEECH_CFLAGS="$GOOGLE_CLOUD_SPEECH_CFLAGS"
+    GOOGLE_CLOUD_SPEECH_LIBS="$GOOGLE_CLOUD_SPEECH_LIBS"
+], [
+    AC_MSG_WARN([Google Cloud Speech library not found. res-speech-google module will not be built.])
+    GOOGLE_CLOUD_SPEECH_CFLAGS=""
+    GOOGLE_CLOUD_SPEECH_LIBS=""
+])
+
+AC_SUBST(GRPC_CFLAGS)
+AC_SUBST(GRPC_LIBS)
+AC_SUBST(GOOGLE_CLOUD_SPEECH_CFLAGS)
+AC_SUBST(GOOGLE_CLOUD_SPEECH_LIBS)
 
 AC_OUTPUT
