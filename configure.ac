@@ -1,4 +1,4 @@
-AC_INIT(asterisk-vosk, 0.3.7)
+AC_INIT([asterisk-google-speech], [0.1.0], [your-email@example.com])
 AM_INIT_AUTOMAKE([no-define foreign nostdinc])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
@@ -32,7 +32,6 @@ AC_SUBST(ASTERISK_CONF_DIR)
 
 AC_CONFIG_FILES([
     Makefile
-    res-speech-vosk/Makefile
     res-speech-google/Makefile
 ])
 

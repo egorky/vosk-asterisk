@@ -479,7 +479,7 @@ static int google_recog_start(struct ast_speech *speech_obj) // Renamed from 'sp
 			recognition_config->set_model(google_speech->model);
 		}
 		recognition_config->set_enable_automatic_punctuation(google_speech->enable_automatic_punctuation);
-		
+
 		streaming_config->set_interim_results(true); // Example: enable interim results
 		// TODO: Add other config options like max_alternatives from speech object
 

@@ -10,8 +10,8 @@ res_speech_google_la_SOURCES = res_speech_google.c
 res_speech_google_la_LDFLAGS = -avoid-version -no-undefined -module -shared
 res_speech_google_la_LIBADD  = $(GRPC_LIBS) $(GOOGLE_CLOUD_SPEECH_LIBS)
 
-load: 
+load:
 	asterisk -rx "module load res_speech_google.so"
 
-unload: 
+unload:
 	asterisk -rx "module unload res_speech_google.so"

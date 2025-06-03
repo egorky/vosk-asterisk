@@ -1,64 +1,14 @@
-# Speech Recognition Modules for Asterisk
+# Asterisk Google Cloud Speech-to-Text Module
 
-This repository provides Asterisk external speech recognition modules. Currently, it supports:
+This repository provides an Asterisk external speech recognition module for integrating with Google Cloud's Speech-to-Text API.
 
-*   **Vosk API**: Integrating with a Vosk Server for speech recognition.
-*   **Google Cloud Speech-to-Text**: Integrating with Google Cloud's Speech-to-Text API.
+## 1. Google Cloud Speech-to-Text (`res_speech_google`)
 
-## 1. Vosk Speech Recognition (`res_speech_vosk`)
-
-This is an Asterisk module for the [Vosk API](https://github.com/alphacep/vosk-api) server: [https://github.com/alphacep/vosk-server](https://github.com/alphacep/vosk-server)
-
-It is tested with the latest Asterisk git master but should equally work with other branches (e.g., 13, 16, 18, 20).
-
-### 1.1. Vosk Dependencies
-
-*   A running Vosk Server instance.
-*   libwebsockets (for connecting to the Vosk server).
-
-### 1.2. Vosk Configuration (`conf/res_speech_vosk.conf`)
-
-The `res_speech_vosk.conf` file configures the connection to your Vosk server.
-
-Example:
-```ini
-[general]
-url = ws://localhost:2700
-```
-*   `url`: The WebSocket URL of your Vosk server.
-
-### 1.3. Building the Vosk Module
-
-Follow the general build instructions in section 3. The Vosk module will be built if its dependencies are met.
-
-### 1.4. Vosk Usage in Asterisk
-
-*   Ensure `res_speech_vosk.so` is loaded in `modules.conf`.
-*   Dialplan example:
-    ```
-    [internal]
-    exten => 1,1,Answer()
-    same = n,Wait(1)
-    same = n,SpeechCreate() ; Creates a speech object
-    same = n,SpeechStart()   ; Actually starts recognition (needed for Vosk server)
-    same = n,SpeechBackground(hello-world,5) ; Play prompt and listen for 5 seconds
-    same = n,Verbose(1, Result was ${SPEECH_TEXT(0)})
-    same = n,Verbose(1, Status was ${SPEECH_STATUS})
-    same = n,SpeechDestroy()
-    same = n,Hangup()
-    ```
-*   Run Vosk server with Docker:
-    ```bash
-    docker run -d -p 2700:2700 alphacep/kaldi-en:latest
-    ```
-
-## 2. Google Cloud Speech-to-Text (`res_speech_google`)
-
-### 2.1. Introduction
+### 1.1. Introduction
 
 The `res-speech-google` module integrates Asterisk with Google Cloud Speech-to-Text, allowing you to use Google's powerful speech recognition capabilities directly within your dialplan.
 
-### 2.2. Dependencies
+### 1.2. Dependencies
 
 To build and run the `res-speech-google` module, you'll need the following:
 
@@ -81,7 +31,7 @@ To build and run the `res-speech-google` module, you'll need the following:
     *   **Important:** The `google-cloud-cpp-speech-dev` (or similarly named) package is crucial. If it's not available in your distribution, you may need to compile the [Google Cloud C++ Client Libraries](https://github.com/googleapis/google-cloud-cpp) from source. Ensure the Speech component is enabled during its build.
     *   The `pkg-config` tool is used by the build system to find these libraries. Ensure your `.pc` files for these libraries are in a standard location.
 
-### 2.3. Configuration (`conf/res_speech_google.conf`)
+### 1.3. Configuration (`conf/res_speech_google.conf`)
 
 The behavior of the `res-speech-google` module is controlled by `conf/res_speech_google.conf`, which should be placed in your Asterisk configuration directory (e.g., `/etc/asterisk/`).
 
@@ -130,11 +80,11 @@ enable_automatic_punctuation = false
 ; If commented out or not set, this defaults to false.
 ```
 
-### 2.4. Building the Google Speech Module
+### 1.4. Building the Google Speech Module
 
-Follow the general build instructions in section 3. The `res-speech-google` module will be compiled if the `./configure` script successfully finds the gRPC and Google Cloud C++ Speech libraries. If these libraries are not found, a warning will be issued, and the module will not be built.
+Follow the general build instructions in Section 2. The `res-speech-google` module will be compiled if the `./configure` script successfully finds the gRPC and Google Cloud C++ Speech libraries. If these libraries are not found, a warning will be issued, and the module will not be built.
 
-### 2.5. Usage in Asterisk (Google Speech)
+### 1.5. Usage in Asterisk
 
 1.  **Load the module:**
     Ensure `res_speech_google.so` is loaded by Asterisk. You can add `load = res_speech_google.so` to your `modules.conf` or load it manually via the Asterisk CLI:
@@ -172,12 +122,12 @@ Follow the general build instructions in section 3. The `res-speech-google` modu
     *   The final transcription is available in the channel variable you specified (e.g., `${SPEECH_TEXT(0)}` if `SpeechBackground` was used, or `${variablename}` if `Speech()` was used directly).
     *   `SPEECH_STATUS`: Indicates the outcome of the speech recognition (e.g., `OK`, `ERROR`, `TIMEOUT`).
 
-### 2.6. Current Status/Limitations (Google Speech)
+### 1.6. Current Status/Limitations
 
 *   The current implementation uses a blocking read for gRPC responses within the audio `write` callback. While functional, for very high-volume concurrent calls, this could introduce latency. Future enhancements might move response handling to a separate thread.
 *   Advanced features like word timings, speaker diarization, or detailed alternative mapping are not yet fully exposed through the Asterisk application but may be available in the underlying Google API.
 
-## 3. General Build and Installation
+## 2. Build and Installation
 
 1.  **Bootstrap the build system:**
     ```bash
@@ -197,7 +147,7 @@ Follow the general build instructions in section 3. The `res-speech-google` modu
     ```bash
     ./configure --prefix=/usr
     ```
-    The configure script will check for necessary dependencies for each module.
+    The configure script will check for necessary dependencies for the module.
 
 3.  **Compile:**
     ```bash
@@ -208,28 +158,24 @@ Follow the general build instructions in section 3. The `res-speech-google` modu
     ```bash
     sudo make install
     ```
-    This will install the `.so` module files into your Asterisk modules directory.
+    This will install the `.so` module file into your Asterisk modules directory.
 
 5.  **Load Modules in Asterisk:**
-    Edit `modules.conf` to ensure the base `res_speech.so` and any desired speech engine modules are loaded:
+    Edit `modules.conf` to ensure the base `res_speech.so` and the speech engine module are loaded:
     ```ini
     load = res_speech.so      ; Core speech API resource
-    ; For Vosk:
-    ; load = res_http_websocket.so ; If your Vosk setup uses WebSockets directly from Asterisk
-    load = res_speech_vosk.so
-    ; For Google Cloud Speech-to-Text:
-    load = res_speech_google.so
+    load = res_speech_google.so ; For Google Cloud Speech-to-Text
     ```
     Alternatively, load them manually via the Asterisk CLI for testing.
 
 6.  **Verify Module Loading:**
     In the Asterisk CLI:
     ```
-    asterisk*CLI> module show like res_speech
+    asterisk*CLI> module show like res_speech_google.so
     ```
-    You should see `res_speech.so`, `res_speech_vosk.so`, and/or `res_speech_google.so` listed and loaded.
+    You should see `res_speech_google.so` listed and loaded.
 
-## 4. Dialplan Usage (General)
+## 3. Dialplan Usage (General)
 
 Refer to the Asterisk documentation for `Speech()` and `SpeechBackground()` applications.
 The general idea is:
@@ -241,14 +187,14 @@ The general idea is:
 
 Always check the Asterisk log files for detailed messages from the speech modules, especially during setup and testing.
 
-## 5. Testing the Google Speech Module (`res_speech_google`)
+## 4. Testing the Google Speech Module
 
 This section provides a guide for manually testing the `res-speech-google` module.
 
-### 5.1. Prerequisites
+### 4.1. Prerequisites
 
 *   **Asterisk Installed:** A working Asterisk installation.
-*   **Module Compiled & Installed:** `res_speech_google.so` must be compiled (as per Section 3) and present in your Asterisk modules directory (e.g., `/usr/lib/asterisk/modules/`).
+*   **Module Compiled & Installed:** `res_speech_google.so` must be compiled (as per Section 2) and present in your Asterisk modules directory (e.g., `/usr/lib/asterisk/modules/`).
 *   **Google Cloud Platform (GCP) Account:**
     *   A GCP project with billing enabled.
     *   The **Cloud Speech-to-Text API** must be enabled for your project.
@@ -265,7 +211,7 @@ This section provides a guide for manually testing the `res-speech-google` modul
             *   Or, by running `gcloud auth application-default login` as the user Asterisk runs under (less common for server daemons).
 *   **Module Configuration File:** `conf/res_speech_google.conf` must be present in your Asterisk configuration directory (e.g., `/etc/asterisk/`).
 
-### 5.2. Configuration Check (`conf/res_speech_google.conf`)
+### 4.2. Configuration Check (`conf/res_speech_google.conf`)
 
 Before testing, double-check your `res_speech_google.conf`:
 
@@ -274,7 +220,7 @@ Before testing, double-check your `res_speech_google.conf`:
 *   `model`: Set to `default` or a specific model like `phone_call` as needed.
 *   `enable_automatic_punctuation`: Set to `true` or `false`.
 
-### 5.3. Asterisk Module Loading
+### 4.3. Asterisk Module Loading
 
 1.  **Start Asterisk.** (If already running, you might need to restart or just load the module).
 2.  **Access Asterisk CLI:** `sudo asterisk -rvvv` (the `vvv` increases verbosity).
@@ -294,7 +240,7 @@ Before testing, double-check your `res_speech_google.conf`:
     ```
 5.  **Check Logs:** Review the Asterisk log files (e.g., `/var/log/asterisk/messages` or `/var/log/asterisk/full`) for any error messages related to `res_speech_google` during loading. Pay attention to messages about configuration parsing or initial credential checks.
 
-### 5.4. Dialplan Example for Testing
+### 4.4. Dialplan Example for Testing
 
 Add the following context to your `extensions.conf`:
 
@@ -356,7 +302,7 @@ exten => talk,1,NoOp(=== Starting Google Speech Test ===)
 **Note on `SpeechBackground` vs. `Record`:**
 The `SpeechBackground()` application itself handles listening for audio. The `Record()` application in this example is primarily for debugging, allowing you to capture the audio that Asterisk is processing and sending (or attempting to send) to the speech engine. In a typical scenario, you might not need `Record()` if `SpeechBackground()` or `Speech()` is sufficient for your ASR needs.
 
-### 5.5. Making a Test Call
+### 4.5. Making a Test Call
 
 1.  **Reload Dialplan:** In the Asterisk CLI: `dialplan reload`
 2.  **Make a call:**
@@ -367,7 +313,7 @@ The `SpeechBackground()` application itself handles listening for audio. The `Re
         ```
         (This method's viability depends heavily on your Asterisk setup for console audio.)
 
-### 5.6. Verification Steps & Expected Output
+### 4.6. Verification Steps & Expected Output
 
 While the test call is active and after it has completed:
 
@@ -393,7 +339,7 @@ While the test call is active and after it has completed:
     *   **API Errors from Google:** Google might return specific error messages if the audio format is unsupported, the language code is invalid, or quotas are exceeded. These should be logged.
     *   `SPEECH_STATUS` variable being `ERROR`.
 
-### 5.7. Troubleshooting Tips
+### 4.7. Troubleshooting Tips
 
 *   **Google Cloud Project:**
     *   Double-check that the **Cloud Speech-to-Text API** is **Enabled** in your GCP project.
